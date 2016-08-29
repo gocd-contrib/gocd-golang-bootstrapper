@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -126,7 +127,18 @@ func startAgent(goServerUrl string, agentMd5 string, agentPluginsMd5 string, age
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	log.Infof("Launching command %v", cmd.Args)
+	// we remove the environment variables that are needed by us, but don't need to be passed onto the agent process
+	re := regexp.MustCompile("^(AUTO_REGISTER_CONTENTS|LOGS_HOST)=.*")
+	filteredEnv := make([]string, 0)
+	for _, elem := range os.Environ() {
+		if !re.MatchString(elem) {
+			filteredEnv = append(filteredEnv, elem)
+		}
+	}
+
+	cmd.Env = filteredEnv
+
+	log.Infof("Launching command %v with environment %v", cmd.Args, cmd.Env)
 	err := cmd.Start()
 
 	if err != nil {
