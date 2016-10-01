@@ -26,23 +26,7 @@ func main() {
 
 	logging.SetBackend(backendFormatter)
 
-	autoRegisterContents, goServerUrl := os.Getenv("AUTO_REGISTER_CONTENTS"), os.Getenv("GO_SERVER_URL")
-
-	if strings.TrimSpace(autoRegisterContents) == "" {
-		log.Critical(`The variable AUTO_REGISTER_CONTENTS must be set, and should contain the contents of the autoregister.properties file. See https://docs.go.cd/current/advanced_usage/agent_auto_register.html for more information.`)
-		os.Exit(1)
-	}
-
-	if strings.TrimSpace(goServerUrl) == "" {
-		log.Critical("The variable GO_SERVER_URL must be set, and should point to the URL of the go server. Example GO_SERVER_URL=https://192.168.0.100:8154/go")
-		os.Exit(1)
-	}
-
-	err = os.Chdir("/go")
-	if err != nil {
-		log.Criticalf("Could not change working directory to /go. %v", err)
-		os.Exit(1)
-	}
+	chDir("./go")
 
 	err = os.RemoveAll("config")
 	if err != nil {
@@ -56,8 +40,34 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = ioutil.WriteFile("config/autoregister.properties", []byte(autoRegisterContents), 0600)
+	writeAutoregisterContents()
+	writeLogFileContents()
 
+	checksumUrl := fmt.Sprintf("%s/admin/latest-agent.status", goServerUrl())
+	log.Debugf("Getting checksums from %s", checksumUrl)
+	agentMd5, agentPluginsMd5, agentLauncherMd5 := getChecksums(checksumUrl)
+	log.Debugf("agent.jar                     - %s", agentMd5)
+	log.Debugf("agent-plugins.zip             - %s", agentPluginsMd5)
+	log.Debugf("agent-launcher.jar (not used) - %s", agentLauncherMd5)
+
+	for {
+		downloadFile(fmt.Sprintf("%s/admin/agent", goServerUrl()), "agent.jar")
+		downloadFile(fmt.Sprintf("%s/admin/agent-plugins.zip", goServerUrl()), "agent-plugins.zip")
+
+		startAgent(goServerUrl(), agentMd5, agentPluginsMd5, agentLauncherMd5)
+	}
+}
+
+func chDir(dir string) {
+	err := os.Chdir(dir)
+	if err != nil {
+		log.Criticalf("Could not change working directory to %s. %v", dir, err)
+		os.Exit(1)
+	}
+}
+
+func writeLogFileContents() {
+	var err error = nil
 	logContents := os.Getenv("LOG_FILE_CONTENTS")
 	if strings.TrimSpace(logContents) == "" {
 		hostName, err := os.Hostname()
@@ -94,20 +104,44 @@ log4j.appender.tcp.Application=%s
 		log.Warning("Could not write go-agent-log4j.properties, continuing.")
 		err = nil
 	}
+}
 
-	checksumUrl := fmt.Sprintf("%s/admin/latest-agent.status", goServerUrl)
-	log.Debugf("Getting checksums from %s", checksumUrl)
-	agentMd5, agentPluginsMd5, agentLauncherMd5 := getChecksums(checksumUrl)
-	log.Debugf("agent.jar                     - %s", agentMd5)
-	log.Debugf("agent-plugins.zip             - %s", agentPluginsMd5)
-	log.Debugf("agent-launcher.jar (not used) - %s", agentLauncherMd5)
+func writeAutoregisterContents() {
+	autoRegisterContents := fmt.Sprintf(`
+agent.auto.register.key=%s
+agent.auto.register.environments=%s
+agent.auto.register.elasticAgent.agentId=%s
+agent.auto.register.elasticAgent.pluginId=%s
+`, getEnvAutoregisterEnvAndAssertNotEmpty("GO_EA_AUTO_REGISTER_KEY"),
+		os.Getenv("GO_EA_AUTO_REGISTER_ENVIRONMENT"),
+		getEnvAutoregisterEnvAndAssertNotEmpty("GO_EA_AUTO_REGISTER_ELASTIC_AGENT_ID"),
+		getEnvAutoregisterEnvAndAssertNotEmpty("GO_EA_AUTO_REGISTER_ELASTIC_PLUGIN_ID"))
 
-	for {
-		downloadFile(fmt.Sprintf("%s/admin/agent", goServerUrl), "agent.jar")
-		downloadFile(fmt.Sprintf("%s/admin/agent-plugins.zip", goServerUrl), "agent-plugins.zip")
-
-		startAgent(goServerUrl, agentMd5, agentPluginsMd5, agentLauncherMd5)
+	err := ioutil.WriteFile("config/autoregister.properties", []byte(autoRegisterContents), 0600)
+	if err != nil {
+		log.Critical("Could not write config/autoregister.properties, continuing.")
+		os.Exit(1)
 	}
+}
+
+func goServerUrl() string {
+	goServerUrl := os.Getenv("GO_SERVER_URL")
+
+	if strings.TrimSpace(goServerUrl) == "" {
+		log.Critical("The variable GO_SERVER_URL must be set, and should point to the URL of the go server. Example GO_SERVER_URL=https://192.168.0.100:8154/go")
+		os.Exit(1)
+	}
+
+	return goServerUrl
+}
+
+func getEnvAutoregisterEnvAndAssertNotEmpty(envName string) string {
+	value := os.Getenv(envName)
+	if strings.TrimSpace(value) == "" {
+		log.Criticalf("The variable '%s' must be set. See https://docs.go.cd/current/advanced_usage/agent_auto_register.html for more information.", envName)
+		os.Exit(1)
+	}
+	return value
 }
 
 func startAgent(goServerUrl string, agentMd5 string, agentPluginsMd5 string, agentLauncherMd5 string) {
@@ -128,7 +162,7 @@ func startAgent(goServerUrl string, agentMd5 string, agentPluginsMd5 string, age
 	cmd.Stderr = os.Stderr
 
 	// we remove the environment variables that are needed by us, but don't need to be passed onto the agent process
-	re := regexp.MustCompile("^(AUTO_REGISTER_CONTENTS|LOGS_HOST)=.*")
+	re := regexp.MustCompile("^(GO_EA|LOGS_HOST)=.*")
 	filteredEnv := make([]string, 0)
 	for _, elem := range os.Environ() {
 		if !re.MatchString(elem) {
