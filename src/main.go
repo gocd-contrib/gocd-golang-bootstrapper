@@ -125,10 +125,10 @@ agent.auto.register.elasticAgent.pluginId=%s
 }
 
 func goServerUrl() string {
-	goServerUrl := os.Getenv("EA_GO_SERVER_URL")
+	goServerUrl := os.Getenv("GO_EA_SERVER_URL")
 
 	if strings.TrimSpace(goServerUrl) == "" {
-		log.Critical("The variable EA_GO_SERVER_URL must be set, and should point to the URL of the go server. Example EA_GO_SERVER_URL=https://192.168.0.100:8154/go")
+		log.Critical("The variable GO_EA_SERVER_URL must be set, and should point to the URL of the go server. Example GO_EA_SERVER_URL=https://192.168.0.100:8154/go")
 		os.Exit(1)
 	}
 
