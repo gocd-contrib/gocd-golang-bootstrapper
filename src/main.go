@@ -125,10 +125,10 @@ agent.auto.register.elasticAgent.pluginId=%s
 }
 
 func goServerUrl() string {
-	goServerUrl := os.Getenv("GO_SERVER_URL")
+	goServerUrl := os.Getenv("EA_GO_SERVER_URL")
 
 	if strings.TrimSpace(goServerUrl) == "" {
-		log.Critical("The variable GO_SERVER_URL must be set, and should point to the URL of the go server. Example GO_SERVER_URL=https://192.168.0.100:8154/go")
+		log.Critical("The variable EA_GO_SERVER_URL must be set, and should point to the URL of the go server. Example EA_GO_SERVER_URL=https://192.168.0.100:8154/go")
 		os.Exit(1)
 	}
 
@@ -189,6 +189,7 @@ func startAgent(goServerUrl string, agentMd5 string, agentPluginsMd5 string, age
 }
 
 func downloadFile(url string, dest string) {
+	log.Infof("Downloading file %s from %s", dest, url)
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -200,11 +201,12 @@ func downloadFile(url string, dest string) {
 	out, err := os.Create(dest)
 
 	if err != nil {
-		log.Critical("Unable to write to file %s. %v", dest, err)
+		log.Criticalf("Unable to write to file %s. %v", dest, err)
 		os.Exit(1)
 	}
 	defer out.Close()
 	io.Copy(out, resp.Body)
+	log.Infof("Finished downloading file %s from %s", dest, url)
 }
 
 func getChecksums(url string) (string, string, string) {
