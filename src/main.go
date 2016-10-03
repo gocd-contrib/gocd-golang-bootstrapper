@@ -162,7 +162,7 @@ func startAgent(goServerUrl string, agentMd5 string, agentPluginsMd5 string, age
 	cmd.Stderr = os.Stderr
 
 	// we remove the environment variables that are needed by us, but don't need to be passed onto the agent process
-	re := regexp.MustCompile("^(GO_EA_|LOGS_HOST)*")
+	re := regexp.MustCompile("^(GO_EA_|LOGS_HOST).*")
 	filteredEnv := make([]string, 0)
 	for _, elem := range os.Environ() {
 		if !re.MatchString(elem) {
