@@ -41,6 +41,7 @@ func main() {
 	}
 
 	writeAutoregisterContents()
+	writeUUIDContents()
 	writeLogFileContents()
 
 	checksumUrl := fmt.Sprintf("%s/admin/latest-agent.status", goServerUrl())
@@ -103,6 +104,21 @@ log4j.appender.tcp.Application=%s
 	if err != nil {
 		log.Warning("Could not write go-agent-log4j.properties, continuing.")
 		err = nil
+	}
+}
+
+
+func writeUUIDContents() {
+	uuidContents := os.Getenv("GO_EA_GUID")
+
+	if strings.TrimSpace(uuidContents) == "" {
+		return
+	}
+
+	err := ioutil.WriteFile("config/guid.txt", []byte(uuidContents), 0600)
+	if err != nil {
+		log.Critical("Could not write config/guid.txt, continuing.")
+		os.Exit(1)
 	}
 }
 
