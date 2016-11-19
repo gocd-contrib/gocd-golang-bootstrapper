@@ -46,16 +46,18 @@ func main() {
 
 	checksumUrl := fmt.Sprintf("%s/admin/latest-agent.status", goServerUrl())
 	log.Debugf("Getting checksums from %s", checksumUrl)
-	agentMd5, agentPluginsMd5, agentLauncherMd5 := getChecksums(checksumUrl)
+	agentMd5, agentPluginsMd5, agentLauncherMd5, tfsImplMd5 := getChecksums(checksumUrl)
 	log.Debugf("agent.jar                     - %s", agentMd5)
 	log.Debugf("agent-plugins.zip             - %s", agentPluginsMd5)
+	log.Debugf("tfs-impl.jar                  - %s", tfsImplMd5)
 	log.Debugf("agent-launcher.jar (not used) - %s", agentLauncherMd5)
 
 	for {
 		downloadFile(fmt.Sprintf("%s/admin/agent", goServerUrl()), "agent.jar")
 		downloadFile(fmt.Sprintf("%s/admin/agent-plugins.zip", goServerUrl()), "agent-plugins.zip")
+		downloadFile(fmt.Sprintf("%s/admin/tfs-impl.jar", goServerUrl()), "tfs-impl.jar")
 
-		startAgent(goServerUrl(), agentMd5, agentPluginsMd5, agentLauncherMd5)
+		startAgent(goServerUrl(), agentMd5, agentPluginsMd5, agentLauncherMd5, tfsImplMd5)
 	}
 }
 
@@ -106,7 +108,6 @@ log4j.appender.tcp.Application=%s
 		err = nil
 	}
 }
-
 
 func writeUUIDContents() {
 	uuidContents := os.Getenv("GO_EA_GUID")
@@ -160,7 +161,7 @@ func getEnvAutoregisterEnvAndAssertNotEmpty(envName string) string {
 	return value
 }
 
-func startAgent(goServerUrl string, agentMd5 string, agentPluginsMd5 string, agentLauncherMd5 string) {
+func startAgent(goServerUrl string, agentMd5 string, agentPluginsMd5 string, agentLauncherMd5 string, tfsImplMd5 string) {
 	cmd := exec.Command("java",
 		"-Dcruise.console.publish.interval=10",
 		"-Xms128m",
@@ -169,6 +170,7 @@ func startAgent(goServerUrl string, agentMd5 string, agentPluginsMd5 string, age
 		fmt.Sprintf("-Dagent.plugins.md5=%s", agentPluginsMd5),
 		fmt.Sprintf("-Dagent.binary.md5=%s", agentMd5),
 		fmt.Sprintf("-Dagent.launcher.md5=%s", agentLauncherMd5),
+		fmt.Sprintf("-Dagent.tfs.md5=%s", tfsImplMd5),
 		"-jar",
 		"agent.jar",
 		"-serverUrl",
@@ -225,7 +227,7 @@ func downloadFile(url string, dest string) {
 	log.Infof("Finished downloading file %s from %s", dest, url)
 }
 
-func getChecksums(url string) (string, string, string) {
+func getChecksums(url string) (string, string, string, string) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
@@ -235,7 +237,10 @@ func getChecksums(url string) (string, string, string) {
 	resp, err := client.Head(url)
 	checkHttpResponse(url, resp, err)
 	resp.Body.Close()
-	return resp.Header.Get("Agent-Content-MD5"), resp.Header.Get("Agent-Plugins-Content-MD5"), resp.Header.Get("Agent-Launcher-Content-MD5")
+	return resp.Header.Get("Agent-Content-MD5"),
+		resp.Header.Get("Agent-Plugins-Content-MD5"),
+		resp.Header.Get("Agent-Launcher-Content-MD5"),
+		resp.Header.Get("TFS-SDK-Content-MD5")
 }
 
 func checkHttpResponse(url string, resp *http.Response, err error) {
