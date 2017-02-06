@@ -45,14 +45,14 @@ func main() {
 	writeLogFileContents()
 
 	checksumUrl := fmt.Sprintf("%s/admin/latest-agent.status", goServerUrl())
-	log.Debugf("Getting checksums from %s", checksumUrl)
-	agentMd5, agentPluginsMd5, agentLauncherMd5, tfsImplMd5 := getChecksums(checksumUrl)
-	log.Debugf("agent.jar                     - %s", agentMd5)
-	log.Debugf("agent-plugins.zip             - %s", agentPluginsMd5)
-	log.Debugf("tfs-impl.jar                  - %s", tfsImplMd5)
-	log.Debugf("agent-launcher.jar (not used) - %s", agentLauncherMd5)
-
 	for {
+		log.Debugf("Getting checksums from %s", checksumUrl)
+		agentMd5, agentPluginsMd5, agentLauncherMd5, tfsImplMd5 := getChecksums(checksumUrl)
+		log.Debugf("agent.jar                     - %s", agentMd5)
+		log.Debugf("agent-plugins.zip             - %s", agentPluginsMd5)
+		log.Debugf("tfs-impl.jar                  - %s", tfsImplMd5)
+		log.Debugf("agent-launcher.jar (not used) - %s", agentLauncherMd5)
+
 		downloadFile(fmt.Sprintf("%s/admin/agent", goServerUrl()), "agent.jar")
 		downloadFile(fmt.Sprintf("%s/admin/agent-plugins.zip", goServerUrl()), "agent-plugins.zip")
 		downloadFile(fmt.Sprintf("%s/admin/tfs-impl.jar", goServerUrl()), "tfs-impl.jar")
