@@ -42,7 +42,7 @@ func main() {
 
 	writeAutoregisterContents()
 	writeUUIDContents()
-	writeLogFileContents()
+	writeLogbackFileContents()
 
 	checksumUrl := fmt.Sprintf("%s/admin/latest-agent.status", goServerUrl())
 	for {
@@ -69,45 +69,41 @@ func chDir(dir string) {
 	}
 }
 
-func writeLogFileContents() {
-	var err error = nil
-	logContents := os.Getenv("LOG_FILE_CONTENTS")
-	if strings.TrimSpace(logContents) == "" {
-		hostName, err := os.Hostname()
-		if err != nil {
-			log.Warning("Could not detect hostname, assuming HOSTNAME environment. %v", err)
-			hostName = os.Getenv("HOSTNAME")
-			err = nil
-		}
+func writeLogbackFileContents() {
+  var err error = nil
+  hostName, err := os.Hostname()
+  if err != nil {
+    log.Warning("Could not detect hostname, assuming HOSTNAME environment. %v", err)
+    hostName = os.Getenv("HOSTNAME")
+    err = nil
+  }
 
-		logContents = fmt.Sprintf(`
-# default to INFO logging on stdout and tcp
-log4j.rootLogger=INFO, stdout, tcp
+  var logbackContents = fmt.Sprintf(`
+<?xml version="1.0" encoding="UTF-8"?>
+<included>
+	  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <encoder>
+      <pattern>
+      	${gocd.agent.logback.defaultPattern:-%%date{ISO8601} %%-5level [%%thread] %%logger{0}:%%line - %%msg%%n}
+      </pattern>
+    </encoder>
+  </appender>
 
-# write logs to stdout
-log4j.appender.stdout=org.apache.log4j.ConsoleAppender
-log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
-log4j.appender.stdout.layout.conversionPattern=%%d{ISO8601} [%%-9t] %%-5p %%-16c{4}:%%L %%x- %%m%%n
-
-# write logs to log server
-log4j.appender.tcp=org.apache.log4j.net.SocketAppender
-log4j.appender.tcp.RemoteHost=%s
-log4j.appender.tcp.ReconnectionDelay=10000
-log4j.appender.tcp.Application=%s
+  <root>
+    <appender-ref ref="STDOUT" />
+  </root>
+</included>
 `, os.Getenv("LOGS_HOST"), hostName)
-	}
 
-	err = ioutil.WriteFile("log4j.properties", []byte(logContents), 0600)
-	if err != nil {
-		log.Warning("Could not write log4j.properites, continuing.")
-		err = nil
-	}
-	err = ioutil.WriteFile("go-agent-log4j.properties", []byte(logContents), 0600)
-	if err != nil {
-		log.Warning("Could not write go-agent-log4j.properties, continuing.")
-		err = nil
-	}
+  err = ioutil.WriteFile("config/go-agent-logback-include.xml", []byte(strings.TrimSpace(logbackContents)), 0600)
+  if err != nil {
+    log.Warning("Could not write config/go-agent-logback-include.xml, continuing.")
+    err = nil
+  }
 }
+
 
 func writeUUIDContents() {
 	uuidContents := os.Getenv("GO_EA_GUID")
