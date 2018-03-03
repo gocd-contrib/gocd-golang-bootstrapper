@@ -18,9 +18,9 @@ go-bootstrapper.linux.amd64: src/main.go goGet
 go-bootstrapper.linux.386: src/main.go goGet
 	GOPATH=$(PWD)/.go GOOS=linux GOARCH=386 go build $(GOFLAGS) -o out/go-bootstrapper-$(VERSION).linux.386 src/main.go
 
-go-bootstrapper.windows.amd64.exe: src/main.go goGet
+go-bootstrapper.windows.amd64: src/main.go goGet
 	GOPATH=$(PWD)/.go GOOS=windows GOARCH=amd64 go build $(GOFLAGS) -o out/go-bootstrapper-$(VERSION).windows.amd64.exe src/main.go
-go-bootstrapper.windows.386.exe: src/main.go goGet
+go-bootstrapper.windows.386: src/main.go goGet
 	GOPATH=$(PWD)/.go GOOS=windows GOARCH=386 go build $(GOFLAGS) -o out/go-bootstrapper-$(VERSION).windows.386.exe src/main.go
 
-all: clean go-bootstrapper.darwin.amd64 go-bootstrapper.darwin.386 go-bootstrapper.linux.amd64 go-bootstrapper.linux.386 go-bootstrapper.windows.amd64.exe go-bootstrapper.windows.386.exe
+all: clean go-bootstrapper.darwin.amd64 go-bootstrapper.darwin.386 go-bootstrapper.linux.amd64 go-bootstrapper.linux.386 go-bootstrapper.windows.amd64 go-bootstrapper.windows.386
