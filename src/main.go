@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"github.com/op/go-logging"
 	"io"
@@ -70,15 +71,9 @@ func chDir(dir string) {
 }
 
 func writeLogbackFileContents() {
-  var err error = nil
-  hostName, err := os.Hostname()
-  if err != nil {
-    log.Warning("Could not detect hostname, assuming HOSTNAME environment. %v", err)
-    hostName = os.Getenv("HOSTNAME")
-    err = nil
-  }
+	var err error = nil
 
-  var logbackContents = fmt.Sprintf(`
+	var logbackContents = fmt.Sprintf(`
 <?xml version="1.0" encoding="UTF-8"?>
 <included>
 	  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -95,15 +90,14 @@ func writeLogbackFileContents() {
     <appender-ref ref="STDOUT" />
   </root>
 </included>
-`, os.Getenv("LOGS_HOST"), hostName)
+`)
 
-  err = ioutil.WriteFile("config/go-agent-logback-include.xml", []byte(strings.TrimSpace(logbackContents)), 0600)
-  if err != nil {
-    log.Warning("Could not write config/go-agent-logback-include.xml, continuing.")
-    err = nil
-  }
+	err = ioutil.WriteFile("config/go-agent-logback-include.xml", []byte(strings.TrimSpace(logbackContents)), 0600)
+	if err != nil {
+		log.Warning("Could not write config/go-agent-logback-include.xml, continuing.")
+		err = nil
+	}
 }
-
 
 func writeUUIDContents() {
 	uuidContents := os.Getenv("GO_EA_GUID")
@@ -171,12 +165,24 @@ func startAgent(goServerUrl string, agentMd5 string, agentPluginsMd5 string, age
 		"agent.jar",
 		"-serverUrl",
 		goServerUrl,
+		"-sslVerificationMode",
 	)
+
+	if insecureSkipVerify() {
+		cmd.Args = append(cmd.Args, "NONE")
+	} else {
+		cmd.Args = append(cmd.Args, "FULL")
+
+		if hasSpecifiedRootCAs() {
+			cmd.Args = append(cmd.Args, "-rootCertFile", rootCertFile())
+		}
+	}
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	// we remove the environment variables that are needed by us, but don't need to be passed onto the agent process
-	re := regexp.MustCompile("^(GO_EA_|LOGS_HOST).*")
+	re := regexp.MustCompile("^(GO_EA_).*")
 	filteredEnv := make([]string, 0)
 	for _, elem := range os.Environ() {
 		if !re.MatchString(elem) {
@@ -205,10 +211,16 @@ func startAgent(goServerUrl string, agentMd5 string, agentPluginsMd5 string, age
 func downloadFile(url string, dest string) {
 	log.Infof("Downloading file %s from %s", dest, url)
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: insecureSkipVerify(),
+			RootCAs:            rootCAs(),
+		},
 	}
 
-	client := &http.Client{Transport: tr}
+	client := &http.Client{
+		Transport: tr,
+	}
+
 	resp, err := client.Get(url)
 	checkHttpResponse(url, resp, err)
 	defer resp.Body.Close()
@@ -225,7 +237,10 @@ func downloadFile(url string, dest string) {
 
 func getChecksums(url string) (string, string, string, string) {
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: insecureSkipVerify(),
+			RootCAs:            rootCAs(),
+		},
 	}
 
 	client := &http.Client{Transport: tr}
@@ -248,5 +263,39 @@ func checkHttpResponse(url string, resp *http.Response, err error) {
 	if resp.StatusCode != 200 {
 		log.Criticalf("The URL %s returned %d.", url, resp.StatusCode)
 		os.Exit(1)
+	}
+}
+
+func insecureSkipVerify() bool {
+	sslVerify := os.Getenv("GO_EA_SSL_VERIFY")
+
+	return !(strings.TrimSpace(sslVerify) == "true")
+}
+
+func hasSpecifiedRootCAs() bool {
+	return !(strings.TrimSpace(rootCertFile()) == "")
+}
+
+func rootCertFile() string {
+	return os.Getenv("GO_EA_SSL_ROOT_CERT_FILE")
+}
+
+func rootCAs() *x509.CertPool {
+	if !hasSpecifiedRootCAs() {
+		certPool, err := x509.SystemCertPool()
+		if err != nil {
+			log.Warning("Couldn't load system certificate pool", err)
+		}
+		return certPool
+	} else {
+		cert, err := ioutil.ReadFile(rootCertFile())
+		if err != nil {
+			log.Critical("Couldn't load file", err)
+			os.Exit(1)
+		}
+
+		certPool := x509.NewCertPool()
+		certPool.AppendCertsFromPEM(cert)
+		return certPool
 	}
 }
