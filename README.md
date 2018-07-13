@@ -32,7 +32,7 @@ The program uses environment variables to configure the agent to make it easy to
 
 | Environment                             | Required | Description                                                                                                  |
 |:----------------------------------------|:---------|:-------------------------------------------------------------------------------------------------------------|
-| `GO_EA_SSL_VERIFY`                      | No       | Whether ssl verification should be turned on. Defaults to `false`.                                           |
+| `GO_EA_SSL_NO_VERIFY`                   | No       | Whether ssl verification should be turned off. Defaults to `false`.                                           |
 | `GO_EA_SSL_ROOT_CERT_FILE`              | No       | The path to the file containing root CA certificates. Defaults to the file provided by the operating system. |
 
 ## Building instructions

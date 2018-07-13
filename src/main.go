@@ -267,9 +267,9 @@ func checkHttpResponse(url string, resp *http.Response, err error) {
 }
 
 func insecureSkipVerify() bool {
-	sslVerify := os.Getenv("GO_EA_SSL_VERIFY")
+	sslVerify := os.Getenv("GO_EA_SSL_NO_VERIFY")
 
-	return !(strings.TrimSpace(sslVerify) == "true")
+	return (strings.TrimSpace(sslVerify) == "false")
 }
 
 func hasSpecifiedRootCAs() bool {
