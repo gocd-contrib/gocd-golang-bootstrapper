@@ -1,11 +1,17 @@
-# GoLang based GoCD agent bootstrapper
+# Native Binary GoCD agent bootstrapper
 
-This is primarily intended to be used by elastic agents to reduce startup time of agents and reduce the memory footprint on the agent machine.
+This is primarily intended to be used by elastic agents to reduce startup time of agents and reduce the memory footprint on the agent machine, since this runs as a native executable.
 
 # Usage
 
+## Download
+
+Get your OS/Architecture specific binary from `https://github.com/ketan/gocd-golang-bootstrapper/releases/latest`
+
+## Run
+
 ```shell
-$ ./go-bootstrapper
+./go-bootstrapper
 ```
 
 # Supported environment variables
@@ -36,6 +42,14 @@ The program uses environment variables to configure the agent to make it easy to
 | `GO_EA_SSL_ROOT_CERT_FILE`              | No       | The path to the file containing root CA certificates. Defaults to the file provided by the operating system. |
 
 ## Building instructions
+
+### Using `go get`
+
+```
+go get -u github.com/ketan/gocd-golang-bootstrapper
+```
+
+### Using `make`
 
 ```
 $ make all
