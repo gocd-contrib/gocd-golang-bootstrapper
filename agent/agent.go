@@ -58,7 +58,7 @@ func Start() error {
 }
 
 func startAgent(goServerURL string, checksums *agentChecksums) error {
-	cmd := exec.Command("java",
+	args := []string{
 		"-Dcruise.console.publish.interval=10",
 		"-Xms128m",
 		"-Xmx256m",
@@ -67,12 +67,18 @@ func startAgent(goServerURL string, checksums *agentChecksums) error {
 		fmt.Sprintf("-Dagent.binary.md5=%s", checksums.agentMd5),
 		fmt.Sprintf("-Dagent.launcher.md5=%s", checksums.launcherMd5),
 		fmt.Sprintf("-Dagent.tfs.md5=%s", checksums.tfsImplMd5),
+	}
+
+	args = append(args, env.JvmArguments()...)
+	args = append(args, []string{
 		"-jar",
 		"agent.jar",
 		"-serverUrl",
 		goServerURL,
 		"-sslVerificationMode",
-	)
+	}...)
+
+	cmd := exec.Command("java", args...)
 
 	if env.InsecureSkipVerify() {
 		cmd.Args = append(cmd.Args, "NONE")
@@ -98,7 +104,12 @@ func startAgent(goServerURL string, checksums *agentChecksums) error {
 
 	cmd.Env = filteredEnv
 
-	log.Infof("Launching command %v with environment %v", cmd.Args, cmd.Env)
+	if env.DumpEnvironment() {
+		log.Infof("Launching command %v with environment %v", cmd.Args, cmd.Env)
+	} else {
+		log.Infof("Launching command %v", cmd.Args)
+	}
+
 	err := cmd.Start()
 
 	if err != nil {
@@ -112,7 +123,7 @@ func startAgent(goServerURL string, checksums *agentChecksums) error {
 	return nil
 }
 
-func downloadFiles(f map[string]string) error {
+func downloadFiles(files map[string]string) error {
 	r, err := rootCAs()
 	if err != nil {
 		return err
@@ -127,7 +138,8 @@ func downloadFiles(f map[string]string) error {
 	client := &http.Client{
 		Transport: tr,
 	}
-	for dest, url := range f {
+
+	for url, dest := range files {
 		log.Infof("Downloading file %s from %s", dest, url)
 		resp, err := client.Get(url)
 		if err != nil {

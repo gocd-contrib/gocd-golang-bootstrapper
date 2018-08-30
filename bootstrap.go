@@ -5,13 +5,15 @@ import (
 
 	"github.com/ketan/gocd-golang-bootstrapper/agent"
 	"github.com/ketan/gocd-golang-bootstrapper/config"
+	"github.com/ketan/gocd-golang-bootstrapper/env"
 	"github.com/ketan/gocd-golang-bootstrapper/log"
 )
 
-const workingDirectory = "./go"
-
 func main() {
+	workingDirectory := env.GoRootDir()
 	log.Init()
+
+	log.Infof("Executing bootstrapper in %s", workingDirectory)
 
 	err := os.Chdir(workingDirectory)
 	if err != nil {

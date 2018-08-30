@@ -25,12 +25,12 @@ func Critical(msg string) {
 
 // Criticalf logs a message using CRITICAL as log level.
 func Criticalf(format string, args ...interface{}) {
-	log.Criticalf(format, args)
+	log.Criticalf(format, args...)
 }
 
 // Debugf logs a message using DEBUG as log level.
 func Debugf(format string, args ...interface{}) {
-	log.Debugf(format, args)
+	log.Debugf(format, args...)
 }
 
 // Info logs a message using INFO as log level.
@@ -40,10 +40,10 @@ func Info(msg string) {
 
 // Infof logs a message using DEBUG as log level.
 func Infof(format string, args ...interface{}) {
-	log.Infof(format, args)
+	log.Infof(format, args...)
 }
 
 // Warningf logs a message using EARNING as log level.
 func Warningf(format string, args ...interface{}) {
-	log.Warningf(format, args)
+	log.Warningf(format, args...)
 }
