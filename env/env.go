@@ -1,7 +1,9 @@
 package env
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/ketan/gocd-golang-bootstrapper/log"
 	"os"
 	"strings"
 )
@@ -15,7 +17,46 @@ const (
 	goEASSLRootCertFileEnv          = "GO_EA_SSL_ROOT_CERT_FILE"
 	goEAGUIDEnv                     = "GO_EA_GUID"
 	goEASSLNoVerifyEnv              = "GO_EA_SSL_NO_VERIFY"
+	goRootDir                       = "GO_EA_ROOT_DIR"
+	goDumpEnvironment               = "GO_EA_DUMP_ENVIRONMENT"
+	goJvmArgs                       = "GO_EA_JVM_ARGS"
 )
+
+// JvmArguments returns the list of jvm arguments that should be passed to the agent
+func JvmArguments() []string {
+	var arr []string
+
+	jsonArgs := os.Getenv(goJvmArgs)
+
+	if strings.TrimSpace(jsonArgs) == "" {
+		jsonArgs = "[]" // the empty array
+	}
+	err := json.Unmarshal([]byte(jsonArgs), &arr)
+
+	if err != nil {
+		log.Warningf("Unable to parse GO_EA_JVM_ARGS: %v", jsonArgs)
+	}
+
+	return arr
+}
+
+// DumpEnvironment returns true if the environment variables should be dumped. Disabled by default to prevent sensitive values from being printed/logged.
+func DumpEnvironment() bool {
+	dump := os.Getenv(goDumpEnvironment)
+
+	return strings.TrimSpace(dump) == "true"
+}
+
+// GoRootDir returns the bootstrapper will run out of. Defaults to `/go`.
+func GoRootDir() string {
+	rootDir := os.Getenv(goRootDir)
+
+	if strings.TrimSpace(rootDir) == "" {
+		return "/go"
+	}
+
+	return rootDir
+}
 
 // GoServerURL reads the env GO_EA_SERVER_URL
 func GoServerURL() (string, error) {
@@ -60,7 +101,7 @@ func GoEAAutoRegisterContents() (string, error) {
 func InsecureSkipVerify() bool {
 	sslVerify := os.Getenv(goEASSLNoVerifyEnv)
 
-	return (strings.TrimSpace(sslVerify) == "false")
+	return (strings.TrimSpace(sslVerify) == "true")
 }
 
 // HasSpecifiedRootCAs checks if any Root CA file has been certified
