@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"time"
 
 	"github.com/ketan/gocd-golang-bootstrapper/env"
@@ -193,7 +194,7 @@ func getChecksums(url string) (*agentChecksums, error) {
 func rootCAs() (*x509.CertPool, error) {
 	if !env.HasSpecifiedRootCAs() {
 		certPool, err := x509.SystemCertPool()
-		if err != nil {
+		if err != nil && runtime.GOOS != "windows" {
 			return nil, fmt.Errorf("Couldn't load system certificate pool, %s", err.Error())
 		}
 		return certPool, nil
