@@ -6,7 +6,7 @@ This is primarily intended to be used by elastic agents to reduce startup time o
 
 ## Download
 
-Get your OS/Architecture specific binary from `https://github.com/ketan/gocd-golang-bootstrapper/releases/latest`
+Get your OS/Architecture specific binary from `https://github.com/gocd-contrib/gocd-golang-bootstrapper/releases/latest`
 
 ## Run
 
@@ -49,7 +49,7 @@ The program uses environment variables to configure the agent to make it easy to
 ### Using `go get`
 
 ```
-go get -u github.com/ketan/gocd-golang-bootstrapper
+go get -u github.com/gocd-contrib/gocd-golang-bootstrapper
 ```
 
 ### Using `make`
