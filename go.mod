@@ -1,4 +1,4 @@
-module github.com/ketan/gocd-golang-bootstrapper
+module github.com/gocd-contrib/gocd-golang-bootstrapper
 
 go 1.19
 

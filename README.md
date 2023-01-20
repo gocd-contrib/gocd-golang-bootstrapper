@@ -49,7 +49,7 @@ The program uses environment variables to configure the agent to make it easy to
 ### Using `go get`
 
 ```
-go get -u github.com/gocd-contrib/gocd-golang-bootstrapper
+go install github.com/gocd-contrib/gocd-golang-bootstrapper@latest
 ```
 
 ### Using `make`

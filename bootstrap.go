@@ -3,10 +3,10 @@ package main
 import (
 	"os"
 
-	"github.com/ketan/gocd-golang-bootstrapper/agent"
-	"github.com/ketan/gocd-golang-bootstrapper/config"
-	"github.com/ketan/gocd-golang-bootstrapper/env"
-	"github.com/ketan/gocd-golang-bootstrapper/log"
+	"github.com/gocd-contrib/gocd-golang-bootstrapper/agent"
+	"github.com/gocd-contrib/gocd-golang-bootstrapper/config"
+	"github.com/gocd-contrib/gocd-golang-bootstrapper/env"
+	"github.com/gocd-contrib/gocd-golang-bootstrapper/log"
 )
 
 func main() {

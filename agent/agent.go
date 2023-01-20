@@ -13,8 +13,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/ketan/gocd-golang-bootstrapper/env"
-	"github.com/ketan/gocd-golang-bootstrapper/log"
+	"github.com/gocd-contrib/gocd-golang-bootstrapper/env"
+	"github.com/gocd-contrib/gocd-golang-bootstrapper/log"
 )
 
 type agentChecksums struct {

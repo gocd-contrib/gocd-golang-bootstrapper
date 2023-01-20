@@ -3,7 +3,7 @@ package env
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ketan/gocd-golang-bootstrapper/log"
+	"github.com/gocd-contrib/gocd-golang-bootstrapper/log"
 	"os"
 	"strings"
 )

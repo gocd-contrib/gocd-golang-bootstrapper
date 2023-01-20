@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ketan/gocd-golang-bootstrapper/env"
+	"github.com/gocd-contrib/gocd-golang-bootstrapper/env"
 )
 
 const logbackContents = `
