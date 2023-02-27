@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -67,7 +66,7 @@ func clean() error {
 }
 
 func writeLogbackFileContents() error {
-	err := ioutil.WriteFile("config/go-agent-logback-include.xml", []byte(strings.TrimSpace(logbackContents)), 0600)
+	err := os.WriteFile("config/go-agent-logback-include.xml", []byte(strings.TrimSpace(logbackContents)), 0600)
 	if err != nil {
 		return fmt.Errorf("Unable to write config/go-agent-logback-include.xml, %s", err.Error())
 	}
@@ -81,7 +80,7 @@ func writeUUIDContents() error {
 		return nil
 	}
 
-	err := ioutil.WriteFile("config/guid.txt", []byte(uuidContents), 0600)
+	err := os.WriteFile("config/guid.txt", []byte(uuidContents), 0600)
 	if err != nil {
 		return fmt.Errorf("Could not write config/guid.txt, %s", err.Error())
 	}
@@ -94,7 +93,7 @@ func writeAutoregisterContents() error {
 		return fmt.Errorf("Could not write config/autoregister.properties, %s", err.Error())
 	}
 
-	err = ioutil.WriteFile("config/autoregister.properties", []byte(v), 0600)
+	err = os.WriteFile("config/autoregister.properties", []byte(v), 0600)
 	if err != nil {
 		return fmt.Errorf("Could not write config/autoregister.properties, %s", err.Error())
 	}

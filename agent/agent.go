@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -199,7 +198,7 @@ func rootCAs() (*x509.CertPool, error) {
 		}
 		return certPool, nil
 	}
-	cert, err := ioutil.ReadFile(env.RootCertFile())
+	cert, err := os.ReadFile(env.RootCertFile())
 	if err != nil {
 		return nil, fmt.Errorf("Couldn't load file, %s", err.Error())
 	}
