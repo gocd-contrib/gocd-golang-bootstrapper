@@ -1,4 +1,4 @@
-VERSION=2.7
+VERSION=2.8
 GOFLAGS=
 
 clean:
@@ -22,4 +22,7 @@ go-bootstrapper.windows.amd64: goGet
 go-bootstrapper.windows.arm64: goGet
 	GOOS=windows GOARCH=arm64 go build $(GOFLAGS) -o out/go-bootstrapper-$(VERSION).windows.arm64.exe .
 
-all: clean go-bootstrapper.darwin.amd64 go-bootstrapper.darwin.arm64 go-bootstrapper.linux.amd64 go-bootstrapper.linux.arm64 go-bootstrapper.windows.amd64 go-bootstrapper.windows.arm64
+summary: goGet
+	pushd out; sha256sum *; popd
+
+all: clean go-bootstrapper.darwin.amd64 go-bootstrapper.darwin.arm64 go-bootstrapper.linux.amd64 go-bootstrapper.linux.arm64 go-bootstrapper.windows.amd64 go-bootstrapper.windows.arm64 summary
