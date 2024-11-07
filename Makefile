@@ -1,4 +1,4 @@
-VERSION=2.21
+VERSION=2.22
 GOFLAGS=
 
 clean:
