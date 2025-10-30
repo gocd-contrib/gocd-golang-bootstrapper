@@ -55,12 +55,12 @@ func Write() error {
 func clean() error {
 	err := os.RemoveAll("config")
 	if err != nil {
-		return fmt.Errorf("There was an error removing the 'config' directory. %s", err.Error())
+		return fmt.Errorf("there was an error removing the 'config' directory. %s", err.Error())
 	}
 
 	err = os.Mkdir("config", 0750)
 	if err != nil {
-		return fmt.Errorf("There was an error creating the 'config' directory. %s", err.Error())
+		return fmt.Errorf("there was an error creating the 'config' directory. %s", err.Error())
 	}
 	return nil
 }
@@ -68,7 +68,7 @@ func clean() error {
 func writeLogbackFileContents() error {
 	err := os.WriteFile("config/go-agent-logback-include.xml", []byte(strings.TrimSpace(logbackContents)), 0600)
 	if err != nil {
-		return fmt.Errorf("Unable to write config/go-agent-logback-include.xml, %s", err.Error())
+		return fmt.Errorf("unable to write config/go-agent-logback-include.xml, %s", err.Error())
 	}
 	return nil
 }
@@ -82,7 +82,7 @@ func writeUUIDContents() error {
 
 	err := os.WriteFile("config/guid.txt", []byte(uuidContents), 0600)
 	if err != nil {
-		return fmt.Errorf("Could not write config/guid.txt, %s", err.Error())
+		return fmt.Errorf("could not write config/guid.txt, %s", err.Error())
 	}
 	return nil
 }
@@ -90,12 +90,12 @@ func writeUUIDContents() error {
 func writeAutoregisterContents() error {
 	v, err := env.GoEAAutoRegisterContents()
 	if err != nil {
-		return fmt.Errorf("Could not write config/autoregister.properties, %s", err.Error())
+		return fmt.Errorf("could not write config/autoregister.properties, %s", err.Error())
 	}
 
 	err = os.WriteFile("config/autoregister.properties", []byte(v), 0600)
 	if err != nil {
-		return fmt.Errorf("Could not write config/autoregister.properties, %s", err.Error())
+		return fmt.Errorf("could not write config/autoregister.properties, %s", err.Error())
 	}
 
 	return nil

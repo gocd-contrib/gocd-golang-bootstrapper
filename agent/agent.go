@@ -113,14 +113,23 @@ func startAgent(goServerURL string, checksums *agentChecksums) error {
 	err := cmd.Start()
 
 	if err != nil {
-		return fmt.Errorf("Could not launch agent process %s", err.Error())
+		return fmt.Errorf("could not launch agent process %s", err.Error())
 	}
 
 	log.Infof("Agent process launched PID(%d), waiting for it to exit.", cmd.Process.Pid)
-	err = cmd.Wait()
-	log.Infof("Agent process PID(%d) exited with %v.\nSleeping 10 seconds, before starting over again", cmd.Process.Pid, cmd.ProcessState)
-	time.Sleep(10 * time.Second)
+	exitStatus := waitFor(cmd)
+	log.Infof("Agent process PID(%d) exited with %s.\nSleeping 5 seconds, before starting over again", cmd.Process.Pid, exitStatus)
+	time.Sleep(5 * time.Second)
 	return nil
+}
+
+func waitFor(cmd *exec.Cmd) string {
+	err := cmd.Wait()
+	if err != nil {
+		return fmt.Sprintf("%v(%s)", cmd.ProcessState, err.Error())
+	} else {
+		return fmt.Sprintf("%v", cmd.ProcessState)
+	}
 }
 
 func downloadFiles(files map[string]string) error {
@@ -140,24 +149,42 @@ func downloadFiles(files map[string]string) error {
 	}
 
 	for url, dest := range files {
-		log.Infof("Downloading file %s from %s", dest, url)
-		resp, err := client.Get(url)
+		err := downloadFile(dest, url, client)
 		if err != nil {
-			return fmt.Errorf("Could not fetch URL %s. %v", url, err)
+			return err
 		}
-		defer resp.Body.Close()
-		if resp.StatusCode != 200 {
-			return fmt.Errorf("the URL %s returned %d", url, resp.StatusCode)
-		}
-
-		out, err := os.Create(dest)
-		if err != nil {
-			return fmt.Errorf("Unable to write to file %s. %s", dest, err.Error())
-		}
-		defer out.Close()
-		io.Copy(out, resp.Body)
-		log.Infof("Finished downloading file %s from %s", dest, url)
 	}
+	return nil
+}
+
+func downloadFile(dest string, url string, client *http.Client) error {
+	log.Infof("Downloading file %s from %s", dest, url)
+	resp, err := client.Get(url)
+	if err != nil {
+		return fmt.Errorf("could not fetch URL %s. %v", url, err)
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("the URL %s returned %d", url, resp.StatusCode)
+	}
+
+	out, err := os.Create(dest)
+	if err != nil {
+		return fmt.Errorf("unable to write to file %s. %s", dest, err.Error())
+	}
+
+	defer func(out *os.File) {
+		_ = out.Close()
+	}(out)
+
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return fmt.Errorf("unable to copy to file %s. %s", dest, err.Error())
+	}
+	log.Infof("Finished downloading file %s from %s", dest, url)
 	return nil
 }
 
@@ -177,9 +204,13 @@ func getChecksums(url string) (*agentChecksums, error) {
 
 	resp, err := client.Head(url)
 	if err != nil {
-		return nil, fmt.Errorf("Could not fetch URL %s. %v", url, err)
+		return nil, fmt.Errorf("could not fetch URL %s. %v", url, err)
 	}
-	defer resp.Body.Close()
+
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
+
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("the URL %s returned %d", url, resp.StatusCode)
 	}
@@ -194,13 +225,13 @@ func rootCAs() (*x509.CertPool, error) {
 	if !env.HasSpecifiedRootCAs() {
 		certPool, err := x509.SystemCertPool()
 		if err != nil && runtime.GOOS != "windows" {
-			return nil, fmt.Errorf("Couldn't load system certificate pool, %s", err.Error())
+			return nil, fmt.Errorf("couldn't load system certificate pool, %s", err.Error())
 		}
 		return certPool, nil
 	}
 	cert, err := os.ReadFile(env.RootCertFile())
 	if err != nil {
-		return nil, fmt.Errorf("Couldn't load file, %s", err.Error())
+		return nil, fmt.Errorf("couldn't load file, %s", err.Error())
 	}
 
 	certPool := x509.NewCertPool()
