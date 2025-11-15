@@ -3,9 +3,10 @@ package env
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gocd-contrib/gocd-golang-bootstrapper/log"
 	"os"
 	"strings"
+
+	"github.com/gocd-contrib/gocd-golang-bootstrapper/log"
 )
 
 const (
@@ -47,12 +48,12 @@ func DumpEnvironment() bool {
 	return strings.TrimSpace(dump) == "true"
 }
 
-// GoRootDir returns the bootstrapper will run out of. Defaults to `/go`.
+// GoRootDir returns the bootstrapper will run out of. Defaults to `/go-working-dir`.
 func GoRootDir() string {
 	rootDir := os.Getenv(goRootDir)
 
 	if strings.TrimSpace(rootDir) == "" {
-		return "/go"
+		return "/go-working-dir"
 	}
 
 	return rootDir
