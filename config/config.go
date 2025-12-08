@@ -39,11 +39,6 @@ func Write() error {
 		return err
 	}
 
-	err = writeUUIDContents()
-	if err != nil {
-		return err
-	}
-
 	err = writeAutoregisterContents()
 	if err != nil {
 		return err
@@ -69,20 +64,6 @@ func writeLogbackFileContents() error {
 	err := os.WriteFile("config/go-agent-logback-include.xml", []byte(strings.TrimSpace(logbackContents)), 0600)
 	if err != nil {
 		return fmt.Errorf("unable to write config/go-agent-logback-include.xml, %s", err.Error())
-	}
-	return nil
-}
-
-func writeUUIDContents() error {
-	uuidContents := env.GoEAUUID()
-
-	if strings.TrimSpace(uuidContents) == "" {
-		return nil
-	}
-
-	err := os.WriteFile("config/guid.txt", []byte(uuidContents), 0600)
-	if err != nil {
-		return fmt.Errorf("could not write config/guid.txt, %s", err.Error())
 	}
 	return nil
 }

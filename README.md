@@ -22,7 +22,6 @@ The program uses environment variables to configure the agent to make it easy to
 
 | Environment              | Required | Description                                                                                                              |
 |--------------------------|----------|--------------------------------------------------------------------------------------------------------------------------|
-| `GO_EA_GUID`             | No       | The contents of `config/guid.txt` file that contains the agent identifier.                                               |
 | `GO_EA_SERVER_URL`       | Yes      | The base url to the GoCD server.                                                                                         |
 | `GO_EA_DUMP_ENVIRONMENT` | No       | Whether environment variables should be dumped to the log. Turned off by default for security.                           |
 | `GO_EA_JVM_ARGS`         | No       | JSON formatted list of args that should be passed as JVM args to the agent process. Example: `["-Dfoo=bar", "-Xmx256m"]` |

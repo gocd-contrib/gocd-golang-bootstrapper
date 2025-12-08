@@ -16,7 +16,6 @@ const (
 	goEAAutoRegisterAgentIDEnv      = "GO_EA_AUTO_REGISTER_ELASTIC_AGENT_ID"
 	goEAAutoRegisterPluginIDEnv     = "GO_EA_AUTO_REGISTER_ELASTIC_PLUGIN_ID"
 	goEASSLRootCertFileEnv          = "GO_EA_SSL_ROOT_CERT_FILE"
-	goEAGUIDEnv                     = "GO_EA_GUID"
 	goEASSLNoVerifyEnv              = "GO_EA_SSL_NO_VERIFY"
 	goRootDir                       = "GO_EA_ROOT_DIR"
 	goDumpEnvironment               = "GO_EA_DUMP_ENVIRONMENT"
@@ -113,11 +112,6 @@ func HasSpecifiedRootCAs() bool {
 // RootCertFile reads GO_EA_SSL_ROOT_CERT_FILE env value
 func RootCertFile() string {
 	return os.Getenv(goEASSLRootCertFileEnv)
-}
-
-// GoEAUUID reads GO_EA_GUID env value
-func GoEAUUID() string {
-	return os.Getenv(goEAGUIDEnv)
 }
 
 func getEnvAutoregisterEnvAndAssertNotEmpty(envName string) (string, error) {
