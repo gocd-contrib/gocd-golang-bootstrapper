@@ -37,7 +37,7 @@ jobs:
         id: tag
         shell: bash
         run: |
-          set -euo pipefail
+          set -euxo pipefail
           last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           highest_minor=$(git tag -l "${MAJOR_VERSION}.*" \
             | sed -nE "s/^${MAJOR_VERSION}\.([0-9]+)$/\1/p" \
@@ -54,7 +54,7 @@ jobs:
           fi
 
       - name: Build and create GitHub release
-        if: steps.go.outputs.cache-hit == false || steps.tag.outputs.has_changes
+        if: steps.go.outputs.cache-hit == 'false' || steps.tag.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
