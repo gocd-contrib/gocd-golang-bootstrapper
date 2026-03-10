@@ -55,6 +55,8 @@ jobs:
 
       - name: Build and create GitHub release
         if: steps.go.outputs.cache-hit == false || steps.tag.outputs.has_changes
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           make VERSION=${{ steps.tag.outputs.tag }} all
           gh release create "${{ steps.tag.outputs.tag }}" --title "${{ steps.tag.outputs.tag }}" --generate-notes out/*
