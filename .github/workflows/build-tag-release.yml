@@ -53,13 +53,8 @@ jobs:
             echo "has_changes=true" >> "${GITHUB_OUTPUT}"
           fi
 
-      - name: Build artifacts
-        if: steps.go.outputs.cache-hit == false || steps.tag.outputs.has_changes
-        run: make VERSION=${{ steps.tag.outputs.tag }} all
-
-      - name: Create GitHub release (and tag) with gh CLI
+      - name: Build and create GitHub release
         if: steps.go.outputs.cache-hit == false || steps.tag.outputs.has_changes
         run: |
-          gh release create "${{ steps.tag.outputs.tag }}" out/* \
-            --title "${{ steps.tag.outputs.tag }}" \
-            --generate-notes
+          make VERSION=${{ steps.tag.outputs.tag }} all
+          gh release create "${{ steps.tag.outputs.tag }}" --title "${{ steps.tag.outputs.tag }}" --generate-notes out/*
