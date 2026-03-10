@@ -1,0 +1,65 @@
+name: Build & Release
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 0 1-7 * FRI' # Run on 1st Friday of every month at 00:00 UTC
+    - cron: '0 0 15-21 * FRI' # Run on 3rd Friday of every month at 00:00 UTC
+  workflow_dispatch:      # Allow manual trigger
+
+env:
+  MAJOR_VERSION: "2"
+
+permissions:
+  contents: write
+
+jobs:
+  build-tag-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        id: go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.x
+          check-latest: true
+          cache: true
+
+      - name: Compute next ${{ env.MAJOR_VERSION }}.x tag
+        id: tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          highest_minor=$(git tag -l "${MAJOR_VERSION}.*" \
+            | sed -nE "s/^${MAJOR_VERSION}\.([0-9]+)$/\1/p" \
+            | sort -n \
+            | tail -1)
+
+          next_patch=$((highest_minor + 1))
+          echo "tag=${MAJOR_VERSION}.${next_patch}" >> "${GITHUB_OUTPUT}"
+          
+          if [ -n "${highest_minor}" ] && git diff --quiet "$last_tag" HEAD; then
+            echo "has_changes=false" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_changes=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Build artifacts
+        if: steps.go.outputs.cache-hit == false || steps.tag.outputs.has_changes
+        run: make VERSION=${{ steps.tag.outputs.tag }} all
+
+      - name: Create GitHub release (and tag) with gh CLI
+        if: steps.go.outputs.cache-hit == false || steps.tag.outputs.has_changes
+        run: |
+          gh release create "${{ steps.tag.outputs.tag }}" out/* \
+            --title "${{ steps.tag.outputs.tag }}" \
+            --generate-notes
