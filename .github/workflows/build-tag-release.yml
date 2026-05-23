@@ -5,8 +5,7 @@ on:
     branches:
       - master
   schedule:
-    - cron: '0 0 1-7 * FRI' # Run on 1st Friday of every month at 00:00 UTC
-    - cron: '0 0 15-21 * FRI' # Run on 3rd Friday of every month at 00:00 UTC
+    - cron: '0 0 * * FRI' # Run on every Friday
   workflow_dispatch:      # Allow manual trigger
 
 env:
